@@ -28,7 +28,7 @@ type alias Model =
     { operand1 : Float
     , operand2 : Float
     , operation : Operation
-    , result : Float
+    , result : Maybe Float
     , status : Status
     }
 
@@ -94,22 +94,22 @@ calculateResult : Model -> Model
 calculateResult model =
     case model.operation of
         Undefined ->
-            { model | result = 0 }
+            { model | result = Nothing }
 
         Add ->
-            { model | result = model.operand1 + model.operand2 }
+            { model | result = Just (model.operand1 + model.operand2) }
 
         Subtract ->
-            { model | result = model.operand1 - model.operand2 }
+            { model | result = Just (model.operand1 - model.operand2) }
 
         Multiply ->
-            { model | result = model.operand1 * model.operand2 }
+            { model | result = Just (model.operand1 * model.operand2) }
 
         Divide ->
-            if model.operand1 == 0 then
-                { model | result = 0 }
+            if model.operand2 == 0 then
+                { model | result = Nothing }
             else
-                { model | result = model.operand1 / model.operand2 }
+                { model | result = Just (model.operand1 / model.operand2) }
 
 
 setOperand : Float -> Model -> Model
@@ -146,7 +146,8 @@ setOperation operation model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div []
+        [ h1 [] [ text <| calcDisplay model ]
+        , div []
             [ makeButton 7 (SetOperand 7)
             , makeButton 8 (SetOperand 8)
             , makeButton 9 (SetOperand 9)
@@ -173,6 +174,16 @@ view model =
         ]
 
 
+calcDisplay : Model -> String
+calcDisplay model =
+    case model.result of
+        Nothing ->
+            "0"
+
+        Just result ->
+            toString result
+
+
 makeButton : a -> Msg -> Html Msg
 makeButton btnText msg =
     button [ onClick msg ] [ text (toString btnText) ]
@@ -187,7 +198,7 @@ init =
     ( { operand1 = 0
       , operand2 = 0
       , operation = Undefined
-      , result = 0
+      , result = Nothing
       , status = ExpectOperand1
       }
     , Cmd.none
