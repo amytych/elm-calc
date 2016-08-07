@@ -56,6 +56,7 @@ update msg model =
             ( model
                 |> setOperand operand
                 |> setStatus
+                |> resetResult
             , Cmd.none
             )
 
@@ -82,6 +83,11 @@ setStatus model =
 
         ExpectResult ->
             { model | status = ExpectOperand1 }
+
+
+resetResult : Model -> Model
+resetResult model =
+    { model | result = Nothing }
 
 
 resetCalc : Model -> Model
@@ -192,7 +198,15 @@ calcDisplay : Model -> String
 calcDisplay model =
     case model.result of
         Nothing ->
-            "0"
+            case ( model.operand1, model.operand2 ) of
+                ( Nothing, Nothing ) ->
+                    "0"
+
+                ( Just operand1, Nothing ) ->
+                    toString operand1
+
+                ( _, Just operand2 ) ->
+                    toString operand2
 
         Just result ->
             if isInfinite result then
