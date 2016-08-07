@@ -24,10 +24,10 @@ type Operation
 
 
 type alias Model =
-    { operand1 : Float
-    , operand2 : Float
-    , operation : Maybe Operation
+    { operand1 : Maybe Float
+    , operand2 : Maybe Float
     , result : Maybe Float
+    , operation : Maybe Operation
     , status : Status
     }
 
@@ -38,7 +38,7 @@ type alias Model =
 
 type Msg
     = SetOperation (Maybe Operation)
-    | SetOperand Float
+    | SetOperand (Maybe Float)
     | CalculateResult
 
 
@@ -86,7 +86,7 @@ setStatus model =
 
 resetCalc : Model -> Model
 resetCalc model =
-    { model | operand1 = 0, operand2 = 0, operation = Nothing }
+    { model | operand1 = Nothing, operand2 = Nothing, operation = Nothing }
 
 
 calculateResult : Model -> Model
@@ -95,23 +95,38 @@ calculateResult model =
         Nothing ->
             { model | result = Nothing }
 
-        Just Add ->
-            { model | result = Just (model.operand1 + model.operand2) }
-
-        Just Subtract ->
-            { model | result = Just (model.operand1 - model.operand2) }
-
-        Just Multiply ->
-            { model | result = Just (model.operand1 * model.operand2) }
-
-        Just Divide ->
-            if model.operand2 == 0 then
-                { model | result = Nothing }
-            else
-                { model | result = Just (model.operand1 / model.operand2) }
+        Just operation ->
+            performCalculation operation model
 
 
-setOperand : Float -> Model -> Model
+performCalculation : Operation -> Model -> Model
+performCalculation operation model =
+    case ( model.operand1, model.operand2 ) of
+        ( Nothing, Nothing ) ->
+            model
+
+        ( Nothing, _ ) ->
+            model
+
+        ( _, Nothing ) ->
+            model
+
+        ( Just operand1, Just operand2 ) ->
+            case operation of
+                Add ->
+                    { model | result = Just ((+) operand1 operand2) }
+
+                Subtract ->
+                    { model | result = Just ((-) operand1 operand2) }
+
+                Multiply ->
+                    { model | result = Just ((*) operand1 operand2) }
+
+                Divide ->
+                    { model | result = Just ((/) operand1 operand2) }
+
+
+setOperand : Maybe Float -> Model -> Model
 setOperand operand model =
     if model.status == ExpectOperand1 then
         { model | operand1 = operand }
@@ -147,25 +162,25 @@ view model =
     div []
         [ h1 [] [ text <| calcDisplay model ]
         , div []
-            [ makeButton 7 (SetOperand 7)
-            , makeButton 8 (SetOperand 8)
-            , makeButton 9 (SetOperand 9)
+            [ makeButton 7 (SetOperand (Just 7))
+            , makeButton 8 (SetOperand (Just 8))
+            , makeButton 9 (SetOperand (Just 9))
             , makeButton "÷" (SetOperation (Just Divide))
             ]
         , div []
-            [ makeButton 4 (SetOperand 4)
-            , makeButton 5 (SetOperand 5)
-            , makeButton 6 (SetOperand 6)
+            [ makeButton 4 (SetOperand (Just 4))
+            , makeButton 5 (SetOperand (Just 5))
+            , makeButton 6 (SetOperand (Just 6))
             , makeButton "×" (SetOperation (Just Multiply))
             ]
         , div []
-            [ makeButton 1 (SetOperand 1)
-            , makeButton 2 (SetOperand 2)
-            , makeButton 3 (SetOperand 3)
+            [ makeButton 1 (SetOperand (Just 1))
+            , makeButton 2 (SetOperand (Just 2))
+            , makeButton 3 (SetOperand (Just 3))
             , makeButton "−" (SetOperation (Just Subtract))
             ]
         , div []
-            [ makeButton 0 (SetOperand 0)
+            [ makeButton 0 (SetOperand (Just 0))
             , makeButton "=" (CalculateResult)
             , makeButton "+" (SetOperation (Just Add))
             ]
@@ -180,7 +195,10 @@ calcDisplay model =
             "0"
 
         Just result ->
-            toString result
+            if isInfinite result then
+                "Not a number"
+            else
+                toString result
 
 
 makeButton : a -> Msg -> Html Msg
@@ -194,8 +212,8 @@ makeButton btnText msg =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { operand1 = 0
-      , operand2 = 0
+    ( { operand1 = Nothing
+      , operand2 = Nothing
       , operation = Nothing
       , result = Nothing
       , status = ExpectOperand1
