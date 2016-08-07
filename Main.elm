@@ -17,8 +17,7 @@ type Status
 
 
 type Operation
-    = Undefined
-    | Add
+    = Add
     | Subtract
     | Multiply
     | Divide
@@ -27,7 +26,7 @@ type Operation
 type alias Model =
     { operand1 : Float
     , operand2 : Float
-    , operation : Operation
+    , operation : Maybe Operation
     , result : Maybe Float
     , status : Status
     }
@@ -38,7 +37,7 @@ type alias Model =
 
 
 type Msg
-    = SetOperation Operation
+    = SetOperation (Maybe Operation)
     | SetOperand Float
     | CalculateResult
 
@@ -87,25 +86,25 @@ setStatus model =
 
 resetCalc : Model -> Model
 resetCalc model =
-    { model | operand1 = 0, operand2 = 0, operation = Undefined }
+    { model | operand1 = 0, operand2 = 0, operation = Nothing }
 
 
 calculateResult : Model -> Model
 calculateResult model =
     case model.operation of
-        Undefined ->
+        Nothing ->
             { model | result = Nothing }
 
-        Add ->
+        Just Add ->
             { model | result = Just (model.operand1 + model.operand2) }
 
-        Subtract ->
+        Just Subtract ->
             { model | result = Just (model.operand1 - model.operand2) }
 
-        Multiply ->
+        Just Multiply ->
             { model | result = Just (model.operand1 * model.operand2) }
 
-        Divide ->
+        Just Divide ->
             if model.operand2 == 0 then
                 { model | result = Nothing }
             else
@@ -120,23 +119,23 @@ setOperand operand model =
         { model | operand2 = operand }
 
 
-setOperation : Operation -> Model -> Model
+setOperation : Maybe Operation -> Model -> Model
 setOperation operation model =
     case operation of
-        Add ->
-            { model | operation = Add }
+        Nothing ->
+            { model | operation = Nothing }
 
-        Subtract ->
-            { model | operation = Subtract }
+        Just Add ->
+            { model | operation = Just Add }
 
-        Multiply ->
-            { model | operation = Multiply }
+        Just Subtract ->
+            { model | operation = Just Subtract }
 
-        Divide ->
-            { model | operation = Divide }
+        Just Multiply ->
+            { model | operation = Just Multiply }
 
-        Undefined ->
-            { model | operation = Undefined }
+        Just Divide ->
+            { model | operation = Just Divide }
 
 
 
@@ -151,24 +150,24 @@ view model =
             [ makeButton 7 (SetOperand 7)
             , makeButton 8 (SetOperand 8)
             , makeButton 9 (SetOperand 9)
-            , makeButton "÷" (SetOperation Divide)
+            , makeButton "÷" (SetOperation (Just Divide))
             ]
         , div []
             [ makeButton 4 (SetOperand 4)
             , makeButton 5 (SetOperand 5)
             , makeButton 6 (SetOperand 6)
-            , makeButton "×" (SetOperation Multiply)
+            , makeButton "×" (SetOperation (Just Multiply))
             ]
         , div []
             [ makeButton 1 (SetOperand 1)
             , makeButton 2 (SetOperand 2)
             , makeButton 3 (SetOperand 3)
-            , makeButton "−" (SetOperation Subtract)
+            , makeButton "−" (SetOperation (Just Subtract))
             ]
         , div []
             [ makeButton 0 (SetOperand 0)
             , makeButton "=" (CalculateResult)
-            , makeButton "+" (SetOperation Add)
+            , makeButton "+" (SetOperation (Just Add))
             ]
         , div [] [ text <| toString model ]
         ]
@@ -197,7 +196,7 @@ init : ( Model, Cmd Msg )
 init =
     ( { operand1 = 0
       , operand2 = 0
-      , operation = Undefined
+      , operation = Nothing
       , result = Nothing
       , status = ExpectOperand1
       }
