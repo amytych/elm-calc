@@ -8,8 +8,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SetOperation operation ->
-            ( model
-                |> setOperation operation
+            ( { model | operation = operation }
                 |> setStatus
             , Cmd.none
             )
@@ -100,22 +99,3 @@ setOperand operand model =
         { model | operand1 = operand }
     else
         { model | operand2 = operand }
-
-
-setOperation : Maybe Operation -> Model -> Model
-setOperation operation model =
-    case operation of
-        Nothing ->
-            { model | operation = Nothing }
-
-        Just Add ->
-            { model | operation = Just Add }
-
-        Just Subtract ->
-            { model | operation = Just Subtract }
-
-        Just Multiply ->
-            { model | operation = Just Multiply }
-
-        Just Divide ->
-            { model | operation = Just Divide }
