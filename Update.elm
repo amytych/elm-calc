@@ -29,13 +29,21 @@ update msg model =
 
 
 {-| When the user sets operation before setting the first operand
-in a typical calc the operand defaults to 0, it's a convenience for the user
+in a typical calc the operand defaults to 0 or the current result,
+if there is any. It's a convenience for the user
 -}
 ensureFirstOperand : Model -> Model
 ensureFirstOperand model =
     case ( model.operation, model.operand1 ) of
         ( Just _, Nothing ) ->
-            { model | operand1 = Just 0 }
+            let
+                operand =
+                    if model.result /= Nothing then
+                        model.result
+                    else
+                        Just 0
+            in
+                { model | operand1 = operand }
 
         ( _, _ ) ->
             model
