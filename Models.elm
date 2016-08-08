@@ -1,13 +1,6 @@
 module Models exposing (..)
 
 
-type Status
-    = ExpectOperand1
-    | ExpectOperand2
-    | ExpectOperation
-    | ExpectResult
-
-
 type Operation
     = Add
     | Subtract
@@ -20,5 +13,4 @@ type alias Model =
     , operand2 : Maybe Float
     , result : Maybe Float
     , operation : Maybe Operation
-    , status : Status
     }

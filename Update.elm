@@ -10,14 +10,12 @@ update msg model =
         SetOperation operation ->
             ( { model | operation = operation }
                 |> ensureFirstOperand
-                |> setStatus
             , Cmd.none
             )
 
         SetOperand operand ->
             ( model
                 |> setOperand operand
-                |> setStatus
                 |> resetResult
             , Cmd.none
             )
@@ -25,14 +23,13 @@ update msg model =
         CalculateResult ->
             ( model
                 |> calculateResult
-                |> setStatus
                 |> resetCalc
             , Cmd.none
             )
 
 
 {-| When the user sets operation before setting the first operand
-in a typical calc the operand defaults to 0, it's a convinience for the user
+in a typical calc the operand defaults to 0, it's a convenience for the user
 -}
 ensureFirstOperand : Model -> Model
 ensureFirstOperand model =
@@ -42,22 +39,6 @@ ensureFirstOperand model =
 
         ( _, _ ) ->
             model
-
-
-setStatus : Model -> Model
-setStatus model =
-    case model.status of
-        ExpectOperand1 ->
-            { model | status = ExpectOperation }
-
-        ExpectOperation ->
-            { model | status = ExpectOperand2 }
-
-        ExpectOperand2 ->
-            { model | status = ExpectResult }
-
-        ExpectResult ->
-            { model | status = ExpectOperand1 }
 
 
 resetResult : Model -> Model
@@ -109,7 +90,7 @@ performCalculation operation model =
 
 setOperand : Maybe Float -> Model -> Model
 setOperand operand model =
-    if model.status == ExpectOperand1 then
+    if model.operation == Nothing then
         { model | operand1 = operand }
     else
         { model | operand2 = operand }

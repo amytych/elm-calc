@@ -17,7 +17,6 @@ init =
       , operand2 = Nothing
       , operation = Nothing
       , result = Nothing
-      , status = ExpectOperand1
       }
     , Cmd.none
     )
