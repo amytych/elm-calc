@@ -12,27 +12,28 @@ view model =
     div []
         [ h1 [] [ text <| calcDisplay model ]
         , div []
-            [ makeButton 7 (SetOperand (Just 7))
-            , makeButton 8 (SetOperand (Just 8))
-            , makeButton 9 (SetOperand (Just 9))
-            , makeButton "÷" (SetOperation (Just Divide))
+            [ button [ onClick (SetOperand "7") ] [ text "7" ]
+            , button [ onClick (SetOperand "8") ] [ text "8" ]
+            , button [ onClick (SetOperand "9") ] [ text "9" ]
+            , button [ onClick (SetOperation (Just Divide)) ] [ text "÷" ]
             ]
         , div []
-            [ makeButton 4 (SetOperand (Just 4))
-            , makeButton 5 (SetOperand (Just 5))
-            , makeButton 6 (SetOperand (Just 6))
-            , makeButton "×" (SetOperation (Just Multiply))
+            [ button [ onClick (SetOperand "4") ] [ text "4" ]
+            , button [ onClick (SetOperand "5") ] [ text "5" ]
+            , button [ onClick (SetOperand "6") ] [ text "6" ]
+            , button [ onClick (SetOperation (Just Multiply)) ] [ text "×" ]
             ]
         , div []
-            [ makeButton 1 (SetOperand (Just 1))
-            , makeButton 2 (SetOperand (Just 2))
-            , makeButton 3 (SetOperand (Just 3))
-            , makeButton "−" (SetOperation (Just Subtract))
+            [ button [ onClick (SetOperand "1") ] [ text "1" ]
+            , button [ onClick (SetOperand "2") ] [ text "2" ]
+            , button [ onClick (SetOperand "3") ] [ text "3" ]
+            , button [ onClick (SetOperation (Just Subtract)) ] [ text "−" ]
             ]
         , div []
-            [ makeButton 0 (SetOperand (Just 0))
-            , makeButton "=" (CalculateResult)
-            , makeButton "+" (SetOperation (Just Add))
+            [ button [ onClick (SetOperand "0") ] [ text "0" ]
+            , button [ onClick (SetOperand ".") ] [ text "." ]
+            , button [ onClick CalculateResult ] [ text "=" ]
+            , button [ onClick (SetOperation (Just Add)) ] [ text "+" ]
             ]
         , div [] [ text <| toString model ]
         ]
@@ -42,15 +43,7 @@ calcDisplay : Model -> String
 calcDisplay model =
     case model.result of
         Nothing ->
-            case ( model.operand1, model.operand2 ) of
-                ( Nothing, Nothing ) ->
-                    "0"
-
-                ( Just operand1, Nothing ) ->
-                    toString operand1
-
-                ( _, Just operand2 ) ->
-                    toString operand2
+            displayedOperand model
 
         Just result ->
             if isInfinite result then
@@ -59,6 +52,14 @@ calcDisplay model =
                 toString result
 
 
-makeButton : a -> Msg -> Html Msg
-makeButton btnText msg =
-    button [ onClick msg ] [ text (toString btnText) ]
+displayedOperand : Model -> String
+displayedOperand model =
+    case ( model.operand1, model.operand2 ) of
+        ( Nothing, Nothing ) ->
+            "0"
+
+        ( Just operand1, Nothing ) ->
+            operand1
+
+        ( _, Just operand2 ) ->
+            operand2

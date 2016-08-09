@@ -14,9 +14,9 @@ update msg model =
             , Cmd.none
             )
 
-        SetOperand operand ->
+        SetOperand partial ->
             ( model
-                |> setOperand operand
+                |> setOperand partial
                 |> resetResult
             , Cmd.none
             )
@@ -39,10 +39,12 @@ ensureFirstOperand model =
         ( Just _, Nothing ) ->
             let
                 operand =
-                    if model.result /= Nothing then
-                        model.result
-                    else
-                        Just 0
+                    case model.result of
+                        Nothing ->
+                            Just "0"
+
+                        Just result ->
+                            Just <| toString result
             in
                 { model | operand1 = operand }
 
@@ -67,82 +69,77 @@ calculateResult model =
             { model | result = Nothing }
 
         Just operation ->
-            performCalculation operation model
+            case ( model.operand1, model.operand2 ) of
+                ( Just operand1, Just operand2 ) ->
+                    { model | result = performCalculation operation operand1 operand2 }
+
+                ( _, _ ) ->
+                    model
 
 
-performCalculation : Operation -> Model -> Model
-performCalculation operation model =
-    case ( model.operand1, model.operand2 ) of
-        ( Nothing, Nothing ) ->
-            model
-
-        ( Nothing, _ ) ->
-            model
-
-        ( _, Nothing ) ->
-            model
-
-        ( Just operand1, Just operand2 ) ->
+performCalculation : Operation -> String -> String -> Maybe Float
+performCalculation operation operand1 operand2 =
+    case ( String.toFloat operand1, String.toFloat operand2 ) of
+        ( Ok op1, Ok op2 ) ->
             case operation of
                 Add ->
-                    { model | result = Just ((+) operand1 operand2) }
+                    Just ((+) op1 op2)
 
                 Subtract ->
-                    { model | result = Just ((-) operand1 operand2) }
+                    Just ((-) op1 op2)
 
                 Multiply ->
-                    { model | result = Just ((*) operand1 operand2) }
+                    Just ((*) op1 op2)
 
                 Divide ->
-                    { model | result = Just ((/) operand1 operand2) }
+                    Just ((/) op1 op2)
+
+        ( _, _ ) ->
+            Nothing
 
 
 {-| Mimicking the typical calc behavior we need to keep
 concatenating the operand1 with each called value, until the user sets
 the operation, and then operand2 until the result is calculated
-E.g. Operand goes from Nothing to Just 1, after user clicks 1,
-then from Just 1 to Just 12 after user clicks 2, and so on…
+E.g. Operand goes from Nothing to Just "1", after user clicks "1",
+then from Just "1" to Just "12" after user clicks "2", and so on…
+Also we need to account for decimals after user clicks "."
 -}
-setOperand : Maybe Float -> Model -> Model
-setOperand operand model =
-    -- Keep updating first one until we have the operation
+setOperand : String -> Model -> Model
+setOperand partial model =
     if model.operation == Nothing then
-        { model | operand1 = getOperand model.operand1 operand }
-        -- then keep updating the second one
+        { model | operand1 = getOperand model.operand1 partial }
     else
-        { model | operand2 = getOperand model.operand2 operand }
+        { model | operand2 = getOperand model.operand2 partial }
 
 
 {-| If we already have a value for the operand, we need to concatenate it with
-the new one, otherwise the new one becomes our operand
+the new one, otherwise the new one becomes our operand, with special handling
+for decimal "." and "0" as
 -}
-getOperand : Maybe Float -> Maybe Float -> Maybe Float
-getOperand currentOperand newOperand =
-    case currentOperand of
-        -- No operand yet, just return the new one
-        Nothing ->
-            newOperand
-
-        -- In case there is a value for it already, try to concatenate it…
-        Just currentOp ->
-            case newOperand of
-                -- …with the new one, first making sure we have it
-                Just newOp ->
-                    concatOperand currentOp newOp
-
-                -- return current in case we have nothing to concatenate it with
+getOperand : Maybe String -> String -> Maybe String
+getOperand current partial =
+    let
+        currentString =
+            case current of
                 Nothing ->
-                    currentOperand
+                    ""
 
+                Just operand ->
+                    operand
+    in
+        case partial of
+            "." ->
+                if String.contains "." currentString then
+                    Just currentString
+                else
+                    Just (currentString ++ partial)
 
-{-| We need to concatenate the operand, e.g. user clicks 1 followed by 2 should
-give us 12
--}
-concatOperand : Float -> Float -> Maybe Float
-concatOperand currentOp newOp =
-    case String.toFloat ((toString currentOp) ++ (toString newOp)) of
-        Err _ ->
-            Just currentOp
+            "0" ->
+                if currentString == "0" then
+                    Just currentString
+                else
+                    Just (currentString ++ partial)
 
-        Ok concatenated ->
-            Just concatenated
+            _ ->
+                Just (currentString ++ partial)

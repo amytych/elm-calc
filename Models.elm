@@ -9,8 +9,8 @@ type Operation
 
 
 type alias Model =
-    { operand1 : Maybe Float
-    , operand2 : Maybe Float
+    { operand1 : Maybe String
+    , operand2 : Maybe String
     , result : Maybe Float
     , operation : Maybe Operation
     }
